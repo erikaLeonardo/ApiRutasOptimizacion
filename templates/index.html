@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Api Optimizacion de Rutas</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #map {
+            height: 80%;
+            width: 100%;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        #inputs {
+            margin: 20px;
+        }
+        #results {
+            margin: 20px;
+        }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAgIwoNsnI4JVgb-jGacBcRLiOd9JMLtRs&libraries=places"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand fs-2" href="#">Optimización de Rutas</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link text-light" href="#" data-toggle="modal" data-target="#originModal">Origen</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-light" href="#" data-toggle="modal" data-target="#destinationModal">Destino</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-light" href="#" data-toggle="modal" data-target="#waypointsModal">Número de Paradas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-light" href="#" data-toggle="modal" data-target="#travelModeModal">Modo de Viaje</a>
+                </li>
+                <li class="nav-item">
+                    <button onclick="generateWaypointInputs()" class="btn btn-outline-light nav-link">Generar Paradas</button>
+                </li>
+                <li class="nav-item">
+                    <button onclick="calculateRoute()" class="btn btn-success nav-link">Calcular Ruta</button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Modal Origen -->
+    <div class="modal fade" id="originModal" tabindex="-1" role="dialog" aria-labelledby="originModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="originModalLabel">Origen</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input id="origin" type="text" class="form-control" placeholder="Origen">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Destino Final -->
+    <div class="modal fade" id="destinationModal" tabindex="-1" role="dialog" aria-labelledby="destinationModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="destinationModalLabel">Destino Final</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input id="destination" type="text" class="form-control" placeholder="Destino final">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Número de Waypoints -->
+    <div class="modal fade" id="waypointsModal" tabindex="-1" role="dialog" aria-labelledby="waypointsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="waypointsModalLabel">Número de Paradas</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input id="num_waypoints" type="number" class="form-control" placeholder="Número de paradas" min="0">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modo de Viaje -->
+    <div class="modal fade" id="travelModeModal" tabindex="-1" role="dialog" aria-labelledby="travelModeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="travelModeModalLabel">Modo de Viaje</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <select id="travel_mode" class="form-control">
+                        <option value="DRIVING">Carro</option>
+                        <option value="BICYCLING">Bicicleta</option>
+                        <option value="WALKING">Caminando</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row mt-4">
+            <div class="col-lg-12">
+                <div id="waypoint_inputs" class="container">
+                    <!-- Contenido de waypoint_inputs -->
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-3">
+                <div id="results" class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Resultados</h5>
+                        <p id="distance" class="card-text"></p>
+                        <p id="duration" class="card-text"></p>
+                        <p id="fuel_cost" class="card-text"></p>
+                        <p id="toll_cost" class="card-text"></p>
+                        <p id="total_cost" class="card-text"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-9">
+                <div id="map" class="mt-4" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+    
+
+    <script>
+        let map;
+        let directionsService;
+        let directionsRenderer;
+        let waypointsData = [];
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 6,
+                center: { lat: 19.432608, lng: -99.133209 } // Ciudad de México
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map
+            });
+        }
+
+        function generateWaypointInputs() {
+            const numWaypoints = document.getElementById('num_waypoints').value;
+            const waypointContainer = document.getElementById('waypoint_inputs');
+            waypointContainer.innerHTML = '';
+
+            for (let i = 0; i < numWaypoints; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'form-control mb-2';
+                input.placeholder = `Parada ${i + 1}`;
+                input.id = `waypoint${i + 1}`;
+                waypointContainer.appendChild(input);
+            }
+        }
+
+        function calculateRoute() {
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            const numWaypoints = document.getElementById('num_waypoints').value;
+            const travelMode = document.getElementById('travel_mode').value;
+
+            waypointsData = [];
+            const waypoints = [];
+            for (let i = 0; i < numWaypoints; i++) {
+                const waypoint = document.getElementById(`waypoint${i + 1}`).value;
+                if (waypoint) {
+                    waypoints.push({ location: waypoint, stopover: true });
+                    waypointsData.push(waypoint);
+                }
+            }
+
+            const request = {
+                origin: origin,
+                destination: destination,
+                waypoints: waypoints,
+                travelMode: travelMode
+            };
+
+            directionsService.route(request, function (result, status) {
+                if (status == 'OK') {
+                    directionsRenderer.setDirections(result);
+
+                    const totalDistance = result.routes[0].legs.reduce((sum, leg) => sum + leg.distance.value, 0) / 1000;  // en kilómetros
+                    const totalDuration = result.routes[0].legs.reduce((sum, leg) => sum + leg.duration.value, 0);  // en segundos
+                    const totalHours = Math.floor(totalDuration / 3600);
+                    const totalMinutes = Math.floor((totalDuration % 3600) / 60);
+
+                    fetch('/get_directions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            origin: origin,
+                            destination: destination,
+                            waypoints: waypoints.map(wp => wp.location),
+                            total_distance: totalDistance,
+                            total_duration: totalDuration,
+                            travel_mode: travelMode
+                        })
+                    }).then(response => response.json())
+                        .then(data => {
+                            document.getElementById('distance').innerText = `Distancia Total: ${data.total_distance.toFixed(2)} km`;
+                            document.getElementById('duration').innerText = `Duración Total: ${totalHours} horas y ${totalMinutes} minutos`;
+                            document.getElementById('fuel_cost').innerText = `Costo Total de Gasolina: $${data.total_fuel_cost.toFixed(2)}`;
+                            document.getElementById('toll_cost').innerText = `Costo Total de Casetas: $${data.total_toll_cost.toFixed(2)}`;
+                            document.getElementById('total_cost').innerText = `Costo Total del Viaje: $${data.total_trip_cost.toFixed(2)}`;
+                        })
+                        .catch(error => console.error('Error:', error));
+                } else {
+                    console.error('Error: ' + status);
+                }
+            });
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
